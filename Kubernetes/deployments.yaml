@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend-container
+          image: public.ecr.aws/v5d9e1r0/yolo/yolo_hello_back:v0.0.1
+          imagePullPolicy: Always
+          ports:
+            - name: backend
+              containerPort: 5000
+          resources:
+            limits:
+              cpu: 256m
+            requests:
+              cpu: 128m
+          livenessProbe:
+            httpGet:
+              path: /
+              port: backend
+            failureThreshold: 1
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: backend
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          startupProbe:
+            httpGet:
+              path: /
+              port: backend
+            failureThreshold: 30
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+            runAsUser: 11000
+            runAsGroup: 12000
+            capabilities:
+              drop:
+                - NET_RAW
+                - ALL
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: public.ecr.aws/v5d9e1r0/yolo/yolo_hello_front:v0.0.1
+          imagePullPolicy: Always
+          ports:
+            - name: frontend
+              containerPort: 4000
+          resources:
+            limits:
+              cpu: 256m
+            requests:
+              cpu: 128m
+          livenessProbe:
+            httpGet:
+              path: /
+              port: frontend
+            failureThreshold: 1
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: frontend
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          startupProbe:
+            httpGet:
+              path: /
+              port: frontend
+            failureThreshold: 30
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+            runAsUser: 11000
+            runAsGroup: 12000
+            capabilities:
+              drop:
+                - NET_RAW
+                - ALL
+          env:
+            - name: BACKEND_URL
+              value: "backend-service"
