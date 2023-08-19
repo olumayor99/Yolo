@@ -1,0 +1,67 @@
+# Default values for yolo_app.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Frontend Deployment
+frontend:
+  metadata:
+    name: frontend
+  replicaCount: 2
+  containerName: frontend-container
+  image:
+    repository: public.ecr.aws/v5d9e1r0/yolo/yolo_hello_front:v0.0.1
+    pullPolicy: Always
+    selectorLabels:
+      app: frontend
+    labels:
+      app: frontend
+
+# Backend Deployment
+backend:
+  metadata:
+    name: backend
+  replicaCount: 2
+  containerName: backend-container
+  image:
+    repository: public.ecr.aws/v5d9e1r0/yolo/yolo_hello_back:v0.0.1
+    pullPolicy: Always
+    selectorLabels:
+      app: backend
+    labels:
+      app: backend
+
+# Frontend Service
+frontendService:
+  name: frontend-service
+  annotations: drayco.com
+  selector:
+    app: frontend
+  type: LoadBalancer
+
+# Backend Service
+backendService:
+  name: backend-service
+  selector:
+    app: backend
+  type: ClusterIP
+
+# Frontend Horizontal Pod Autoscaler
+frontendHPA:
+  minReplicas: 2
+  maxReplicas: 8
+  averageUtilization: 10
+
+# Backendend Horizontal Pod Autoscaler
+backendHPA:
+  minReplicas: 2
+  maxReplicas: 8
+  averageUtilization: 10
+
+# ExternalDNS
+externalDNS:
+  domainFilter: drayco.com
+  txtOwnerID: Z046868710106H7HIXYYF
+
+# Cluster Autoscaler
+clusterAutoscaler:
+  clusterName: YoloEKS

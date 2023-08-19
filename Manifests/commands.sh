@@ -23,3 +23,12 @@ wget https://raw.githubusercontent.com/kubernetes/autoscaler/master/cluster-auto
 kubectl scale --replicas=60 deployment frontend
 
 kubectl scale --replicas=60 deployment backend
+
+# Helm
+helm create yolo_app
+
+helm template yolo_app
+
+helm lint yolo_app
+
+helm install YoloRelease yolo_app

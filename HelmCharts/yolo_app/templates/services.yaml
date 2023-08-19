@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.frontendService.name }}
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: {{ .Values.frontendService.annotations }}
+spec:
+  selector: 
+    {{ .Values.frontendService.selector }}
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 4000
+  type: {{ .Values.frontendService.type }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.backendService.name }}
+spec:
+  selector: 
+    {{ .Values.backendService.selector }}
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: {{ .Values.backendService.type }}
