@@ -33,7 +33,8 @@ backend:
 # Frontend Service
 frontendService:
   name: frontend-service
-  annotations: drayco.com
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: drayco.com
   selector:
     app: frontend
   type: LoadBalancer
@@ -65,3 +66,7 @@ externalDNS:
 # Cluster Autoscaler
 clusterAutoscaler:
   clusterName: YoloEKS
+
+# Frontend Configmap
+frontendCMData:
+  BACKEND_URL: http://backend-service

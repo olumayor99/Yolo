@@ -3,10 +3,14 @@ kind: Service
 metadata:
   name: {{ .Values.frontendService.name }}
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: {{ .Values.frontendService.annotations }}
+    {{- range $key, $val := .Values.frontendService.annotations }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end }}
 spec:
-  selector: 
-    {{ .Values.frontendService.selector }}
+  selector:
+    {{- range $key, $val := .Values.frontendService.selector }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end }}
   ports:
     - protocol: TCP
       port: 80
@@ -20,8 +24,10 @@ kind: Service
 metadata:
   name: {{ .Values.backendService.name }}
 spec:
-  selector: 
-    {{ .Values.backendService.selector }}
+  selector:
+    {{- range $key, $val := .Values.backendService.selector }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end }}
   ports:
     - protocol: TCP
       port: 80

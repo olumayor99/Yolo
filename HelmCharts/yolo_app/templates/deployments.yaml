@@ -6,11 +6,15 @@ spec:
   replicas: {{ .Values.backend.replicaCount }}
   selector:
     matchLabels:
-      {{ .Values.backend.image.selectorLabels }}
+      {{- range $key, $val := .Values.backend.image.selectorLabels }}
+      {{ $key }}: {{ $val | quote }}
+      {{- end }}
   template:
     metadata:
       labels:
-        {{ .Values.backend.image.labels }}
+        {{- range $key, $val := .Values.backend.image.labels }}
+        {{ $key }}: {{ $val | quote }}
+        {{- end }}
     spec:
       containers:
         - name: {{ .Values.backend.containerName }}
@@ -65,11 +69,15 @@ spec:
   replicas: {{ .Values.frontend.replicaCount }}
   selector:
     matchLabels:
-      {{ .Values.frontend.image.selectorLabels }}
+      {{- range $key, $val := .Values.frontend.image.selectorLabels }}
+      {{ $key }}: {{ $val | quote }}
+      {{- end }}
   template:
     metadata:
       labels:
-        {{ .Values.frontend.image.labels }}
+        {{- range $key, $val := .Values.frontend.image.labels }}
+        {{ $key }}: {{ $val | quote }}
+        {{- end }}
     spec:
       containers:
         - name: {{ .Values.frontend.containerName }}
@@ -114,6 +122,6 @@ spec:
               drop:
                 - NET_RAW
                 - ALL
-          env:
-            - name: BACKEND_URL
-              value: "backend-service"
+          envFrom:
+            - configMapRef:
+                name: frontend-configmap
