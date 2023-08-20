@@ -10,7 +10,7 @@ A Sportsbook DevOps Engineer Task. It consists of a minimal frontend and backend
 ## Architecture
 ![Archi!](./assets/images/archi.png)
 
-For detailed information about the architecture, design considerations, and also design improvements, please visit [DESIGN.md](DESIGN.md).
+For detailed information about the architecture, design considerations, and also design improvements (security and monitoring solutions), please visit [DESIGN.md](DESIGN.md).
 
 ## Deployment
 First, you need to meet/get the following requirements. Click on the links to take you to the respective pages that will describe how to install and set them up properly.
