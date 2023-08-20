@@ -1,13 +1,13 @@
 # Yolo
 A Sportsbook DevOps Engineer Task. It consists of a minimal frontend and backend (both written in Elixir using Phoenix, Cowboy, Plug, and Php). It is configured to be deployed to AWS using Terraform and Helm.
 
-### Demo**
+## Demo**
 ![Demo!](./assets/images/yollo_front.png)
 
 
 **There is an issue with the frontend image. See "Issues" section in [DESIGN.md](DESIGN.md) for details.
 
-### Architecture
+## Architecture
 
 ## Deployment
 First, you need to meet/get the following requirements. Click on the links to take you to the respective pages that will describe how to install and set them up properly.
