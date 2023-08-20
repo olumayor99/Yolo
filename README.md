@@ -391,7 +391,7 @@ If the domain name set in the `domain_name` variable in [variables.tf](Infrastru
 
 3. Take them to the domain name registrar of your domain name and add then to the domain name's settings. Wait for a while and visit the domain name in a browser and you should be able to access the page.
    
-## Destroying
+## Destroy resources
 
 1. Run `helm delete yolo` and wait for it to finish.
 2. Then go into the [Infrastructure](Infrastructure) folder and run `terraform destroy`, at the prompt, respond "yes".
