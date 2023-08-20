@@ -28,6 +28,11 @@ output "cluster_name" {
   value       = module.eks.cluster_name
 }
 
+output "cluster_region" {
+  description = "Kubernetes Cluster Region"
+  value       = var.aws_region
+}
+
 output "cluster_endpoint" {
   description = "Endpoint for EKS control plane"
   value       = module.eks.cluster_endpoint
@@ -46,6 +51,11 @@ output "eks_ca_iam_role_arn" {
 output "oidc_issuer" {
   value = module.eks.oidc_provider
   description = "AWS IAM role ARN for EKS Cluster Autoscaler"
+}
+
+output "domain_name" {
+  value = var.domain_name
+  description = "Hosted Zone name"
 }
 
 output "hosted_zone_id" {
