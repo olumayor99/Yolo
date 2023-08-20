@@ -32,3 +32,5 @@ helm template yolo_app
 helm lint yolo_app
 
 helm install YoloRelease yolo_app
+
+# Delete A record and TXT record
