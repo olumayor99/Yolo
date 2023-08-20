@@ -253,7 +253,7 @@ cd ../HelmCharts/yolo_app/
 vi values.yaml
 ```
 
-It's contents are similar to the following
+Its contents are similar to the following
 
 ```yaml
 # Default values for yolo_app.
@@ -396,8 +396,7 @@ If the domain name set in the `domain_name` variable in [variables.tf](Infrastru
 4. Sometimes the infrastructure isn't destroyed completely because of the DNS Hosted Zone record.
    
    ```sh
-   Error: deleting Route53 Hosted Zone (Z0090123D8QUDP819VKC): HostedZoneNotEmpty: The specified hosted zone contains non-required resource record sets and so cannot be deleted.
-│       status code: 400, request id: d5a077ad-b731-449b-b945-dd47fcaf2d51
+   Error: deleting Route53 Hosted Zone (Z0090123D8QUDP819VKC): HostedZoneNotEmpty: The specified hosted zone contains non-required resource record sets and so cannot be deleted. status code: 400, request id: d5a077ad-b731-449b-b945-dd47fcaf2d51
    ```
    
    Delete the highlighted records (`A`, and `TXT`) below and run step 2 or step 3 again, it will destroy all the resources completely.
