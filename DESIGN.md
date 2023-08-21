@@ -6,6 +6,7 @@ The app is deployed on an EKS cluster which is provisioned in a VPC. The whole i
 
 You can view a detailed map of the resources the terraform scripts create by uploading the [plan.json](Infrastructure/plan.json) file [here](https://hieven.github.io/terraform-visual/).
 
+
 ### VPC
 
 The VPC was provisioned using the [VPC Terraform module](https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest). The module helps with compactness of code, and also allows provisioning many VPC-related resources by just specifying their conditions and/or values. I provisioned public subnets for loadBalancers, private subnets for kubernetes nodes, and intra subnets for EKS controlplane resources. This is the recommended way by AWS. The resources all spanned across three availability zones.
@@ -28,6 +29,7 @@ kubectl run -i --tty load-generator --rm --image=busybox --restart=Never -- /bin
 kubectl run -i --tty load-generator2 --rm --image=busybox --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://backend-service; done"
 
 ```
+
 Then after some minutes, run `kubectl get pods`, which should show you that the pods have scaled up.
 
 
@@ -44,6 +46,7 @@ ip-10-10-7-29.ec2.internal     Ready    <none>   24m   v1.27.3-eks-a5565ad
 
 ```
 
+
 then running either `kubectl scale --replicas=60 deployment frontend` or `kubectl scale --replicas=60 deployment backend` to trigger cluster scaling
 
 ```sh
@@ -52,28 +55,33 @@ deployment.apps/frontend scaled
 
 ```
 
+
 and after some minutes, when we run `kubectl get nodes`, you'll see that more nodes are being created and added to the cluster.
 
 ```sh
 
 ```
 
+
 The cluster autoscaler type that I used is the auto0discovery type, so it uses the AWS recommended standards, and no values need to be set. It also automatically scales down when the resources used by the pods reduces.
 
 I delpoyed all the ressources in the default namespace for ease of managing the dployed resources, because it is a minimal application, and also because I didn't have enough time to properly configure the logic for namespace to namespace communication. It will get complicated when multiple apps need to be deployed, so this isn't recommended in production. 
+
 
 ### Ingress
 
 The frontend is exposed to the internet using a Load Balancer, and configuring it sometimes can be tiring, especially when you have to configure ingress controllers, ingress resources, DNS Hosted Zones, and then nameservers. That's where external-dns comes in. 
 Using external DNS instead of the traditional kubernetes ingress controller means loadbalancers can be connected to Hosted Zones on the fly, thereby eliminating the need for manual configuration which might be tedious and/or problem-ridden. All that's needed is to create a loadbalancerand set the `external-dns.alpha.kubernetes.io/hostname` field to the name of the Hosted Zone, and it will take care of the rest. The only manual configuration that might be needed is if the domain name is not managed by Route53, in which case you'll need to take the nameservers from the Hosted Zone and configure them in your domain name registrar.
 
+
 ### Helm
 
-I converted the kubernetes manifests in the [Manifests](Manifests) directory to Helm charts using the `helm create CHART` command, in my case, it was `helm create yolo_app`, after which I edited the kubernetes manifests to use variables for the properties I feel can be edited or customised, and I then created the variables in the values.yaml file for the helm chart.
+I converted the kubernetes manifests in the [Manifests](Manifests) directory to Helm charts using the `helm create CHART_NAME` command, in my case, it was `helm create yolo_app`, after which I edited the kubernetes manifests to use variables for the properties I feel can be edited or customised, and I then created the variables in the values.yaml file for the helm chart.
 I added all the resources under a single chart, and while this is acceptable even in production, it gets more difficult to manage when the number of deployments and apps increases significantly. Using a main chart, and multiple subcharts is the better way to go. It has the following advantages:
 
 1. Ease of managing the charts.
 2. Ease of releasing apps without being held back by other teams.
+
 
 ### Terraform
 
@@ -82,6 +90,7 @@ I used an Amazon S3 bucket to store the state file, and and a DynamoDB for state
 1. They are easier to implement for my use-case.
 2. I don't have a terraform cloud account subscription. Terraform Cloud is what Hashicorp reccommends, but S3 and DynamoDB work perfectly well too.
 3. Storing the state locally is not an option. (I stored the state-file for creating the [backend](Remotestate) locally though, that's bad practice, not recommended).
+
 
 I also didn't use terraform workspaces for the following reasons:
 
@@ -98,6 +107,7 @@ Apart from the security groups created and configured by the EKS module, I imple
 2. I deactivated privilege escalation in the containers so if anybody gains access into the cluster, they can't run any exploits since they'll mostly need elevated privileges to do so.
 3. Add `- NET_RAW` and `- ALL` to spec.container[0].securityContext.capabilities.drop in deployments to disable the `NET_RAW` capability so hackers can't exploit it.
 4. I made the root filesystem read-only so no hacker can write to it even if they gain access into the cluster.
+
 
 ### Monitoring
 
