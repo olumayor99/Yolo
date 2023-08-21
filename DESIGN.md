@@ -146,7 +146,10 @@ Apart from the security groups created and configured by the EKS module, I imple
 
 ### Monitoring
 
-
+While provisioning the VPC, I enabled VPC Flow Logs. This is to enable the use of CloudWatch logging later on where it can capture the network flow and events in the whole VPC. CloudWatch can also be integrated with DataDog for better log aggregation. I also enabled logs in the EKS cluster (api, controllerManager, and scheduler) for this same purpose.
+Another way of monitoring the cluster is using Prometheus, Alert Manager, and Grafana dashboards. This is a very common setup for monitoring.
+My go-to choice will be Fluentd with InfluxDb (to store time-series stamped logs).
+Another setup which I've used in the past which gives very fine-grained control is using Istio as a Service Mesh, and using Jaeger for Open Telemetry, in combination with Prometheus, Alert manager, and Grafana. Open telemetry makes it easy to locate errors in Kubernetes clusters by monitoring data flow through the resources in the cluster.
 
 ### Issues
 
