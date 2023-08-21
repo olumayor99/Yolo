@@ -1,6 +1,6 @@
 # Yolo
 
-A Sportsbook DevOps Engineer Task. It consists of a minimal frontend and backend (both written in Elixir using Phoenix, Cowboy, Plug, and Php). It is configured to be deployed to AWS using Terraform and Helm.
+A Sportsbook DevOps Engineer Task. It consists of a minimal frontend and backend (both written in Elixir using Phoenix, Cowboy, Plug, and Php). It is configured to be deployed to an EKS cluster on AWS using Terraform and Helm.
 
 
 ## Demo**
@@ -27,7 +27,7 @@ First, you need to meet/get the following requirements. Click on the links to ta
 4. [Helm](https://helm.sh/docs/intro/install/)
 5. [Terraform](https://developer.hashicorp.com/terraform/downloads)
    
-Once the requirements are met, you need to create an ACCESS KEY on your AWS account and configure AWSCLI to use it. You can use [this](https://docs.aws.amazon.com/cli/latest/userguide/cli-authentication-user.html) tutorial if you don't know how to go about it.
+Once the requirements are met, you need to create an ACCESS KEY on your AWS account and configure AWSCLI to use it. You can use [this](https://docs.aws.amazon.com/cli/latest/userguide/cli-authentication-user.html) tutorial if you don't know how to go about that.
 
 The next step is to clone this repository and go into the folder using the following commands in your preferred terminal:
 
@@ -137,7 +137,7 @@ variable "domain_name" {
 ```
 
 
-After editing to your taste, you need to configure the terraform backend. In this case, we're using an S3 bucket to store the state, and a DynamoDB table to lock the state while deployment is ongoing. I'll asume that you have neither of these created, so I've written scripts to enable you provision them (if you want to create them manually and you don't know how to, use [this](https://docs.aws.amazon.com/AmazonS3/latest/userguide/create-bucket-overview.html) article, and [this](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/getting-started-step-1.html) one too) First you need to customise the script. Run the following commands (I'm assuming you're still in the Infrastructure directory):
+After editing it to your taste, you need to configure the terraform backend. In this case, we're using an S3 bucket to store the state, and a DynamoDB table to lock the state while deployment is ongoing. I'll asume that you have neither of these created, so I've written scripts to enable you provision them (if you want to create them manually and you don't know how to, use [this](https://docs.aws.amazon.com/AmazonS3/latest/userguide/create-bucket-overview.html) article, and [this](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/getting-started-step-1.html) too) First you need to customise the script. Run the following commands (I'm assuming you're still in the [Infrastructure](Infrastructure) directory):
 
 ```sh
 cd ../RemoteState
@@ -204,7 +204,7 @@ module "dynamodb_table" {
 ```
 
 
-Save that, and then head back to the [Infrastructure](Infrastructure) folder using 
+Save that, then head back to the [Infrastructure](Infrastructure) folder using 
 
 ```sh
 cd ../Infrastructure
@@ -233,7 +233,7 @@ terraform {
 ```
 
 
-Once all that is done, confirm that you're in the [Infrastructure](Infrastructure) folder, then initialize the terraform backend and install the modules using 
+Once that's done, confirm that you're in the [Infrastructure](Infrastructure) folder, then initialize the terraform backend and install the modules/packages using 
 
 ```sh
 terraform init
@@ -451,7 +451,57 @@ TEST SUITE: None
 
 Now when you run `kubectl get all -A`, you should get a response similar to the image below:
 
-![Cluster!](./assets/images/cluster.png)
+
+```sh
+$ kubectl get all -A
+NAMESPACE     NAME                                                             READY   STATUS    RESTARTS   AGE
+default       pod/backend-7b4c4fc9fb-8frmf                                     1/1     Running   0          35s
+default       pod/backend-7b4c4fc9fb-tx6f8                                     1/1     Running   0          35s
+default       pod/external-dns-586d768cdc-p2nwm                                1/1     Running   0          35s
+default       pod/frontend-fbf844655-cqkk2                                     1/1     Running   0          35s
+default       pod/frontend-fbf844655-rjt4j                                     1/1     Running   0          35s
+kube-system   pod/aws-node-2s8ck                                               1/1     Running   0          7m11s
+kube-system   pod/aws-node-48lht                                               1/1     Running   0          6m50s
+kube-system   pod/cluster-autoscaler-aws-cluster-autoscaler-779c678f46-fhhzt   1/1     Running   0          8m21s
+kube-system   pod/coredns-79df7fff65-fvhvq                                     1/1     Running   0          12m
+kube-system   pod/coredns-79df7fff65-zzx62                                     1/1     Running   0          12m
+kube-system   pod/kube-proxy-8lvtn                                             1/1     Running   0          7m11s
+kube-system   pod/kube-proxy-tslpk                                             1/1     Running   0          6m50s
+kube-system   pod/metrics-server-5d875656f5-95hx6                              1/1     Running   0          35s
+
+NAMESPACE     NAME                                                TYPE           CLUSTER-IP       EXTERNAL-IP                                                              PORT(S)         AGE
+default       service/backend-service                             ClusterIP      172.20.195.199   <none>                                                                   80/TCP          37s
+default       service/frontend-service                            LoadBalancer   172.20.236.140   a0045ab24dd1c44d2afbb3b5da011531-754554442.us-east-1.elb.amazonaws.com   80:30063/TCP    37s
+default       service/kubernetes                                  ClusterIP      172.20.0.1       <none>                                                                   443/TCP         12m
+kube-system   service/cluster-autoscaler-aws-cluster-autoscaler   ClusterIP      172.20.110.51    <none>                                                                   8085/TCP        8m22s
+kube-system   service/kube-dns                                    ClusterIP      172.20.0.10      <none>                                                                   53/UDP,53/TCP   12m
+kube-system   service/metrics-server                              ClusterIP      172.20.254.160   <none>                                                                   443/TCP         37s
+
+NAMESPACE     NAME                        DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+kube-system   daemonset.apps/aws-node     2         2         2       2            2           <none>          12m
+kube-system   daemonset.apps/kube-proxy   2         2         2       2            2           <none>          12m
+
+NAMESPACE     NAME                                                        READY   UP-TO-DATE   AVAILABLE   AGE
+default       deployment.apps/backend                                     2/2     2            2           37s
+default       deployment.apps/external-dns                                1/1     1            1           37s
+default       deployment.apps/frontend                                    2/2     2            2           37s
+kube-system   deployment.apps/cluster-autoscaler-aws-cluster-autoscaler   1/1     1            1           8m23s
+kube-system   deployment.apps/coredns                                     2/2     2            2           12m
+kube-system   deployment.apps/metrics-server                              1/1     1            1           37s
+
+NAMESPACE     NAME                                                                   DESIRED   CURRENT   READY   AGE
+default       replicaset.apps/backend-7b4c4fc9fb                                     2         2         2       37s
+default       replicaset.apps/external-dns-586d768cdc                                1         1         1       37s
+default       replicaset.apps/frontend-fbf844655                                     2         2         2       37s
+kube-system   replicaset.apps/cluster-autoscaler-aws-cluster-autoscaler-779c678f46   1         1         1       8m23s
+kube-system   replicaset.apps/coredns-79df7fff65                                     2         2         2       12m
+kube-system   replicaset.apps/metrics-server-5d875656f5                              1         1         1       37s
+
+NAMESPACE   NAME                                           REFERENCE             TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+default     horizontalpodautoscaler.autoscaling/backend    Deployment/backend    <unknown>/10%   2         100       2          37s
+default     horizontalpodautoscaler.autoscaling/frontend   Deployment/frontend   <unknown>/10%   2         100       2          37s
+
+```
 
 
 ## Viewing the app
@@ -468,7 +518,7 @@ If the domain name set in the `domain_name` variable in [variables.tf](Infrastru
 
 3. Take them to the domain name registrar of your domain name and add then to the domain name's settings. Wait for a while and visit the domain name in a browser and you should be able to access the page.
 
-   
+
 ## Destroy resources
 
 1. Run `helm delete yolo` and wait for it to finish.

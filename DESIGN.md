@@ -21,7 +21,20 @@ I deployed two types of auto-scalers in the EKS cluster: a horizontal pod autosc
 
 A horizontal pod autoscaler works by getting metrics (CPU, or memory) from the target pods in a cluster, and it will add more pods or delete more pods based on the set target limit, and the difference between the minimum pods, maximum pods, and the actual number of pods. It needs the metrics server deployed for it to be able to work. Athough you can define HPA in the deployments, I prefer managing it as a separate configuration because it's easier that way.
 
-To test HPA, run the following commands to simulate load on the pods (I set the target limits very low so scaling will happen very quickly):
+To test HPA, we first check the number of pods running in the default namespace with `kubectl get pods`
+
+```sh
+$ kubectl get pods
+NAME                            READY   STATUS    RESTARTS   AGE
+backend-7b4c4fc9fb-8frmf        1/1     Running   0          7m8s
+backend-7b4c4fc9fb-tx6f8        1/1     Running   0          7m8s
+external-dns-586d768cdc-p2nwm   1/1     Running   0          7m8s
+frontend-fbf844655-cqkk2        1/1     Running   0          7m8s
+frontend-fbf844655-rjt4j        1/1     Running   0          7m8s
+
+```
+
+then we'll run the following commands to simulate load on the pods (I set the target limits very low so they will be met easily scaling will happen quickly):
 
 ```sh
 kubectl run -i --tty load-generator --rm --image=busybox --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://frontend-service; done"
@@ -30,7 +43,24 @@ kubectl run -i --tty load-generator2 --rm --image=busybox --restart=Never -- /bi
 
 ```
 
-Then after some minutes, run `kubectl get pods`, which should show you that the pods have scaled up.
+Then after some minutes, open another terminal window and run `kubectl get pods`, which should show you that the pods have scaled up.
+
+```sh
+$ kubectl get pods
+NAME                            READY   STATUS    RESTARTS   AGE
+backend-7b4c4fc9fb-8frmf        1/1     Running   0          10m
+backend-7b4c4fc9fb-b9fht        1/1     Running   0          34s
+backend-7b4c4fc9fb-dfl6l        1/1     Running   0          34s
+backend-7b4c4fc9fb-gnr8h        1/1     Running   0          49s
+backend-7b4c4fc9fb-tx6f8        1/1     Running   0          10m
+backend-7b4c4fc9fb-wk5nh        1/1     Running   0          34s
+external-dns-586d768cdc-p2nwm   1/1     Running   0          10m
+frontend-fbf844655-cqkk2        1/1     Running   0          10m
+frontend-fbf844655-rjt4j        1/1     Running   0          10m
+load-generator2                 1/1     Running   0          73s
+
+```
+As you can se, the number of the backend pods has increased (I ran the second comand).
 
 
 Cluster autoscaler on the other hand scales the kubernetes nodes based on the amount of pods on a node, and the resources they consume. Once the resources consumed by the pods are close to the limits of the resources available on the nodes, cluster autoscaler creates and adds more nodes to the cluster automatically. This can be tested by first running `kubectl get nodes` to see the number of nodes running at the time
@@ -38,11 +68,8 @@ Cluster autoscaler on the other hand scales the kubernetes nodes based on the am
 ```sh
 $ kubectl get nodes
 NAME                           STATUS   ROLES    AGE   VERSION
-ip-10-10-28-132.ec2.internal   Ready    <none>   24m   v1.27.3-eks-a5565ad
-ip-10-10-29-68.ec2.internal    Ready    <none>   25m   v1.27.3-eks-a5565ad
-ip-10-10-40-135.ec2.internal   Ready    <none>   24m   v1.27.3-eks-a5565ad
-ip-10-10-40-177.ec2.internal   Ready    <none>   25m   v1.27.3-eks-a5565ad
-ip-10-10-7-29.ec2.internal     Ready    <none>   24m   v1.27.3-eks-a5565ad
+ip-10-10-10-108.ec2.internal   Ready    <none>   19m   v1.27.3-eks-a5565ad
+ip-10-10-18-154.ec2.internal   Ready    <none>   19m   v1.27.3-eks-a5565ad
 
 ```
 
@@ -59,13 +86,21 @@ deployment.apps/frontend scaled
 and after some minutes, when we run `kubectl get nodes`, you'll see that more nodes are being created and added to the cluster.
 
 ```sh
+$ kubectl get nodes
+NAME                           STATUS   ROLES    AGE   VERSION
+ip-10-10-10-108.ec2.internal   Ready    <none>   21m   v1.27.3-eks-a5565ad
+ip-10-10-18-154.ec2.internal   Ready    <none>   21m   v1.27.3-eks-a5565ad
+ip-10-10-27-231.ec2.internal   Ready    <none>   53s   v1.27.3-eks-a5565ad
+ip-10-10-37-76.ec2.internal    Ready    <none>   45s   v1.27.3-eks-a5565ad
+ip-10-10-5-68.ec2.internal     Ready    <none>   31s   v1.27.3-eks-a5565ad
 
 ```
 
+It checks if there are any unscheduled pods waiting to be scheduled, and if the resources available on the nodes aren't enough for those pods, it provisions more nodes and adds them to the cluster. It also watches nodes to determine if they are used/unused, and if a node stays unused for 10 minutes, it removes it from the cluster.
 
-The cluster autoscaler type that I used is the auto0discovery type, so it uses the AWS recommended standards, and no values need to be set. It also automatically scales down when the resources used by the pods reduces.
+The cluster autoscaler type that I used is the auto0discovery type, so it uses the AWS recommended standards, and no values need to be set. It obeys the limits set in the node groups though, and they have to be changed when the workload on the claster gets larger so it can work properly.
 
-I delpoyed all the ressources in the default namespace for ease of managing the dployed resources, because it is a minimal application, and also because I didn't have enough time to properly configure the logic for namespace to namespace communication. It will get complicated when multiple apps need to be deployed, so this isn't recommended in production. 
+I delpoyed all the ressources in the default namespace for ease of managing them because it is a minimal application, and also because I didn't have enough time to properly configure the logic for namespace to namespace communication. It will get complicated when multiple apps need to be deployed, so this isn't recommended in production. 
 
 
 ### Ingress
