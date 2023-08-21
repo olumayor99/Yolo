@@ -449,7 +449,7 @@ TEST SUITE: None
 ```
 
 
-Now when you run `kubectl get all -A`, you should get a response similar to the image below:
+Now when you run `kubectl get all -A`, you should get a response similar to this
 
 
 ```sh
