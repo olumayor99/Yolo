@@ -1,18 +1,24 @@
 # Yolo
+
 A Sportsbook DevOps Engineer Task. It consists of a minimal frontend and backend (both written in Elixir using Phoenix, Cowboy, Plug, and Php). It is configured to be deployed to AWS using Terraform and Helm.
 
-## Demo**
-![Demo!](./assets/images/yollo_front.png)
 
+## Demo**
+
+![Demo!](./assets/images/yollo_front.png)
 
 **There is an issue with the frontend image. See "Issues" section in [DESIGN.md](DESIGN.md) for details.
 
+
 ## Architecture
+
 ![Archi!](./assets/images/archi.png)
 
 For detailed information about the architecture, design considerations, and also design improvements (security and monitoring solutions), please visit [DESIGN.md](DESIGN.md).
 
+
 ## Deployment
+
 First, you need to meet/get the following requirements. Click on the links to take you to the respective pages that will describe how to install and set them up properly.
 
 1. An [AWS](https://aws.amazon.com) account.
@@ -29,6 +35,7 @@ The next step is to clone this repository and go into the folder using the follo
 git clone https://github.com/olumayor99/Yolo.git
 cd Yolo
 ```
+
 
 Here is the folder structure of the repository:
 
@@ -102,6 +109,7 @@ vi variables.tf #**
 ```
 **You can edit the file with any other editor you have, I just prefer using vi.
 
+
 The [variables.tf](Infrastructure/variables.tf) file contains all the variables that can be cutomised to your taste. Below is how it looks.
 
 ```tf
@@ -128,12 +136,14 @@ variable "domain_name" {
 }
 ```
 
+
 After editing to your taste, you need to configure the terraform backend. In this case, we're using an S3 bucket to store the state, and a DynamoDB table to lock the state while deployment is ongoing. I'll asume that you have neither of these created, so I've written scripts to enable you provision them (if you want to create them manually and you don't know how to, use [this](https://docs.aws.amazon.com/AmazonS3/latest/userguide/create-bucket-overview.html) article, and [this](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/getting-started-step-1.html) one too) First you need to customise the script. Run the following commands (I'm assuming you're still in the Infrastructure directory):
 
 ```sh
 cd ../RemoteState
 vi backend.tf 
 ```
+
 
 It should display a file like the one below
 
@@ -193,17 +203,20 @@ module "dynamodb_table" {
 }
 ```
 
+
 Save that, and then head back to the [Infrastructure](Infrastructure) folder using 
 
 ```sh
 cd ../Infrastructure
 ```
 
+
 and edit the [backend.tf](Infrastructure/backend.tf) using
 
 ```sh
 vi backend.tf
 ```
+
 
 Replace the key if you wish. Note that it must end with the ".tfstate" extension for it to work.
 
@@ -219,11 +232,14 @@ terraform {
 }
 ```
 
+
 Once all that is done, confirm that you're in the [Infrastructure](Infrastructure) folder, then initialize the terraform backend and install the modules using 
 
 ```sh
 terraform init
 ```
+
+
 It is successful when you get a message like the one below:
 
 ```sh
@@ -242,11 +258,13 @@ rerun this command to reinitialize your working directory. If you forget, other
 commands will detect it and remind you to do so if necessary.
 ```
 
+
 View the plan of the resources it will deploy using:
 
 ```sh
 terraform plan
 ```
+
 
 After seeing the plan and confirming the resources it will deploy, run the following command, and respond "yes" to the prompt to deploy the resources.
 
@@ -254,11 +272,13 @@ After seeing the plan and confirming the resources it will deploy, run the follo
 terraform apply
 ```
 
+
 You can also run the following command to skip the prompt.
 
 ```sh
 terraform apply --auto-approve
 ```
+
 
 If it deploys all the resources successfully, you should get a response similar to the one below:
 
@@ -292,6 +312,7 @@ vpc_name = "Yolo-vpc"
 
 ```
 
+
 The outputs displayed here are defined in the [outputs.tf](Infrastructure/outputs.tf) file. Please note the value of the `domain_name`, `hosted_zone_id`, `cluster_name`, and `cluster_region` fields, they will be needed in one of the next steps. The other outputs can also be saved, but they aren't really needed for now.
 
 The scripts in the [Infrastructure](Infrastructure) directory will deploy a VPC, an EKS cluster, and all the other needed resources such as an internet gateway, subnets, DNS Hosted Zone, security groups, NAT gateways, Node Groups, Service Accounts, etc. These resources are essential for the app to function properly.
@@ -304,12 +325,14 @@ aws eks update-kubeconfig --region us-east-1 --name Yolo-EKS
 
 `us-east-1` should be replaced with the value of the `cluster_region` output, and `Yolo-EKS` with the value of the `cluster_name` output respectively.
 
+
 The next step is to deploy the app to the cluster. This is done using the helm chart located in the [HelmCharts](HelmCharts) directory. Before deployment though, we need to edit the [values.yaml](HelmCharts/yolo_app/values.yaml) file. Run the following commands to do that:
 
 ```sh
 cd ../HelmCharts/yolo_app/
 vi values.yaml
 ```
+
 
 Its contents are similar to the following
 
@@ -386,6 +409,7 @@ frontendCMData:
 
 ```
 
+
 Replace the `clusterName` value with the `cluster_name` output value that you noted earlier, `domainFilter` with the `domain_name` output value, and then the value of `txtOwnerID` with the value of the `hosted_zone_id`.
 
 After completing this step, run the following command to view the helm templates:
@@ -394,17 +418,20 @@ After completing this step, run the following command to view the helm templates
 helm template yolo_app
 ```
 
+
 then run this to make sure the helm templates are properly linted
 
 ```sh
 helm lint yolo_app
 ```
 
+
 and then deploy the app with
 
 ```sh
 helm install yolo yolo_app
 ```
+
 
 `yolo` is the name of the release, wile `yolo_app` is the name of the chart. You can change `yolo` to any name you want, but you can't change the name of the chart.
 
@@ -421,9 +448,11 @@ TEST SUITE: None
 
 ```
 
+
 Now when you run `kubectl get all -A`, you should get a response similar to the image below:
 
 ![Cluster!](./assets/images/cluster.png)
+
 
 ## Viewing the app
 
@@ -438,6 +467,7 @@ If the domain name set in the `domain_name` variable in [variables.tf](Infrastru
    ![ns!](./assets/images/ns.png)
 
 3. Take them to the domain name registrar of your domain name and add then to the domain name's settings. Wait for a while and visit the domain name in a browser and you should be able to access the page.
+
    
 ## Destroy resources
 
