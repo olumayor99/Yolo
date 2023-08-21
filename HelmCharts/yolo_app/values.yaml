@@ -49,24 +49,20 @@ backendService:
 # Frontend Horizontal Pod Autoscaler
 frontendHPA:
   minReplicas: 2
-  maxReplicas: 8
+  maxReplicas: 100
   averageUtilization: 10
 
 # Backendend Horizontal Pod Autoscaler
 backendHPA:
   minReplicas: 2
-  maxReplicas: 8
+  maxReplicas: 100
   averageUtilization: 10
 
 # ExternalDNS
 externalDNS:
   domainFilter: drayco.com
   txtOwnerID: Z046868710106H7HIXYYF
-
-# Cluster Autoscaler
-clusterAutoscaler:
-  clusterName: YoloEKS
-
+  
 # Frontend Configmap
 frontendCMData:
   BACKEND_URL: http://backend-service

@@ -32,7 +32,67 @@ cd Yolo
 
 Here is the folder structure of the repository:
 
-![Tree!](./assets/images/tree.png)
+```sh
+$ tree
+.
+|-- DESIGN.md
+|-- HelmCharts
+|   `-- yolo_app
+|       |-- Chart.yaml
+|       |-- charts
+|       |-- templates
+|       |   |-- _helpers.tpl
+|       |   |-- configmaps.yaml
+|       |   |-- deployments.yaml
+|       |   |-- external-dns.yaml
+|       |   |-- horizontal-pod-autoscaler.yaml
+|       |   |-- metrics-server.yaml
+|       |   `-- services.yaml
+|       `-- values.yaml
+|-- Infrastructure
+|   |-- backend.tf
+|   |-- ca.tf
+|   |-- dns.tf
+|   |-- eks.tf
+|   |-- iam.tf
+|   |-- outputs.tf
+|   |-- plan.json
+|   |-- plan.out
+|   |-- providers.tf
+|   |-- variables.tf
+|   |-- versions.tf
+|   `-- vpc.tf
+|-- Manifests
+|   |-- cluster-autoscaler.yaml
+|   |-- commands.sh
+|   |-- deployments.yaml
+|   |-- external-dns.yaml
+|   |-- horizontal-pod-autoscaler.yaml
+|   |-- metrics-server.yaml
+|   `-- services.yaml
+|-- README.md
+|-- RemoteState
+|   |-- backend.tf
+|   |-- terraform.tfstate
+|   `-- terraform.tfstate.backup
+`-- assets
+    `-- images
+        |-- archi.png
+        |-- cluster.png
+        |-- cmerr.png
+        |-- err.png
+        |-- hz.png
+        |-- interr.png
+        |-- kerr.png
+        |-- ns.png
+        |-- perr.png
+        |-- tree.png
+        `-- yollo_front.png
+
+9 directories, 44 files
+
+```
+
 
 We need to deploy the infrastructure before we can deploy the application itself. To deploy the infrastructure, we first need to customise some variables such as the names of the resources, the region to deploy them to, and a bunch of others. Run the following commands:
 
@@ -205,34 +265,29 @@ If it deploys all the resources successfully, you should get a response similar 
 ```sh
 Releasing state lock. This may take a few moments...
 
-Apply complete! Resources: 77 added, 0 changed, 0 destroyed.
+Apply complete! Resources: 79 added, 0 changed, 0 destroyed.
 
 Outputs:
 
-cluster_endpoint = "https://25FCE35DA77117561CCBDD7D68D5778F.gr7.us-east-1.eks.amazonaws.com"
+cluster_endpoint = "https://3B11B9E7577EEBF8FB6EAD3C2425A976.gr7.us-east-1.eks.amazonaws.com"
 cluster_name = "Yolo-EKS"
 cluster_region = "us-east-1"
-cluster_security_group_id = "sg-0fd780659ed4c442d"
-common_tags = {
-  "Environment" = "dev"
-  "Project" = "yolo"
-}
+cluster_security_group_id = "sg-04d38b0c29a6f11c4"
 domain_name = "drayco.com"
-eks_ca_iam_role_arn = "arn:aws:iam::573763289578:role/Yolo-cluster-autoscaler"
-hosted_zone_id = "Z0090123D8QUDP819VKC"
-oidc_issuer = "oidc.eks.us-east-1.amazonaws.com/id/25FCE35DA77117561CCBDD7D68D5778F"
+hosted_zone_id = "Z01691221PDTF4OGQN1U3"
+oidc_issuer = "oidc.eks.us-east-1.amazonaws.com/id/3B11B9E7577EEBF8FB6EAD3C2425A976"
 prefix = "Yolo"
 private_subnets = [
-  "subnet-00ebb9c10cec856e0",
-  "subnet-0fb45e4d9b9f84a2e",
-  "subnet-0a8e86f74f3990a25",
+  "subnet-0841712b4a67c22e5",
+  "subnet-045d1f4790ce3bf96",
+  "subnet-0de7b49a1bdc81ac4",
 ]
 public_subnets = [
-  "subnet-01a20d3877266b042",
-  "subnet-0d0158b8937de7877",
-  "subnet-0561dc9c4b4dd44e8",
+  "subnet-000993cc2b6f3c61b",
+  "subnet-001517377be3f67ce",
+  "subnet-0d34067ebc5167856",
 ]
-vpc_id = "vpc-0b2a2b482a11f431f"
+vpc_id = "vpc-0db51720f607ec9fd"
 vpc_name = "Yolo-vpc"
 
 ```
@@ -310,27 +365,24 @@ backendService:
 # Frontend Horizontal Pod Autoscaler
 frontendHPA:
   minReplicas: 2
-  maxReplicas: 8
+  maxReplicas: 100
   averageUtilization: 10
 
 # Backendend Horizontal Pod Autoscaler
 backendHPA:
   minReplicas: 2
-  maxReplicas: 8
+  maxReplicas: 100
   averageUtilization: 10
 
 # ExternalDNS
 externalDNS:
   domainFilter: drayco.com
   txtOwnerID: Z046868710106H7HIXYYF
-
-# Cluster Autoscaler
-clusterAutoscaler:
-  clusterName: YoloEKS
-
+  
 # Frontend Configmap
 frontendCMData:
   BACKEND_URL: http://backend-service
+
 
 ```
 
@@ -372,10 +424,6 @@ TEST SUITE: None
 Now when you run `kubectl get all -A`, you should get a response similar to the image below:
 
 ![Cluster!](./assets/images/cluster.png)
-
-and `kubectl get sa -A`, gives a response similar to the image below:
-
-![SA!](./assets/images/sa.png)
 
 ## Viewing the app
 

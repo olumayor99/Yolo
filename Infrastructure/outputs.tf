@@ -2,10 +2,6 @@ output "prefix" {
   value       = var.prefix
   description = "Exported common resources prefix"
 }
-output "common_tags" {
-  value       = local.tags
-  description = "Exported common resources tags"
-}
 output "vpc_id" {
   value       = module.vpc.vpc_id
   description = "VPC ID"
@@ -41,11 +37,6 @@ output "cluster_endpoint" {
 output "cluster_security_group_id" {
   description = "Security group ids attached to the cluster control plane"
   value       = module.eks.cluster_security_group_id
-}
-
-output "eks_ca_iam_role_arn" {
-  value = aws_iam_role.cluster_autoscaler.arn
-  description = "AWS IAM role ARN for EKS Cluster Autoscaler"
 }
 
 output "oidc_issuer" {

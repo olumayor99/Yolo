@@ -4,18 +4,22 @@ The app consists of two deployments which are `frontend`, and `backend`. The fro
 
 The app is deployed on an EKS cluster which is provisioned in a VPC. The whole infrastructure was provisioned using terraform, and the app was deployed using Helm.
 
+You can view a detailed map of the resources the terraform scripts create by uploading the [plan.json](Infrastructure/plan.json) file [here](https://hieven.github.io/terraform-visual/).
+
 ### VPC
 
-The VPC was provisioned using the VPC terraform module. The module helps with compactness of code, and also allows provisioning many VPC-related resources by just specifying some values using fewer characters. I provisioned public subnets for loadbalancers, private subnets for kubernetes nodes, and intra subnets for EKS controlplane resources. This is the recommended way by AWS. The resources all spanned across three availability zones.
+The VPC was provisioned using the [VPC Terraform module](https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest). The module helps with compactness of code, and also allows provisioning many VPC-related resources by just specifying their conditions and/or values. I provisioned public subnets for loadBalancers, private subnets for kubernetes nodes, and intra subnets for EKS controlplane resources. This is the recommended way by AWS. The resources all spanned across three availability zones.
 I was also able to provision a single NAT gateway for the VPC, an internet gateway, a private route table, and a public route table too (the route tables were automatically created by the VPC module). The VPC module provisioned the route tables with the least routes needed, and they were more than okay for my use-case.
 
 
 ### EKS
 
-The EKS cluster was provisioned with the EKS Terraform module. It consists of two nodegroups, one uses on-demand instances, and the other one uses spot instances. The EKS module automatically creates and configures the recommended security groups for the EKS cluster according to AWS best practices.
+The EKS cluster was provisioned with the [EKS Terraform module](https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest). It consists of two nodegroups, one uses on-demand instances, and the other uses spot instances. This was done for cost savings. The EKS module automatically creates and configures the recommended security groups for the EKS cluster according to AWS best practices.
+An OIDC provider was also deployed, making it easier to create and grant permissions to service accounts needed by some resources (e.g. external-dns, and cluster-autoscaler).
 I deployed two types of auto-scalers in the EKS cluster: a horizontal pod autoscaler (HPA), and a cluster autoscaler (CA).
 
-A horizontal pod autoscaler works by getting metrics (CPU, or memory) from the target pods in a cluster, and it will add more pods or delete more pods based on the set target limit, and the difference between the minimum pods, maximum pods, and the actual number of pods. It needs the metrics server deployed for it to be able to work.
+A horizontal pod autoscaler works by getting metrics (CPU, or memory) from the target pods in a cluster, and it will add more pods or delete more pods based on the set target limit, and the difference between the minimum pods, maximum pods, and the actual number of pods. It needs the metrics server deployed for it to be able to work. Athough you can define HPA in the deployments, I prefer managing it as a separate configuration because it's easier that way.
+
 To test HPA, run the following commands to simulate load on the pods (I set the target limits very low so scaling will happen very quickly):
 
 ```sh
@@ -27,15 +31,33 @@ kubectl run -i --tty load-generator2 --rm --image=busybox --restart=Never -- /bi
 Then after some minutes, run `kubectl get pods`, which should show you that the pods have scaled up.
 
 
-Cluster autoscaler on the other hand scales the kubernetes nodes based on the amount of pods on a node, and the resources they consume. Once the resources consumed by the pods are close to the limits of the resources available on the nodes, cluster autoscaler creates and adds more nodes to the cluster automatically. This can be tested by running the following commands:
+Cluster autoscaler on the other hand scales the kubernetes nodes based on the amount of pods on a node, and the resources they consume. Once the resources consumed by the pods are close to the limits of the resources available on the nodes, cluster autoscaler creates and adds more nodes to the cluster automatically. This can be tested by first running `kubectl get nodes` to see the number of nodes running at the time
 
 ```sh
-kubectl scale --replicas=60 deployment frontend
+$ kubectl get nodes
+NAME                           STATUS   ROLES    AGE   VERSION
+ip-10-10-28-132.ec2.internal   Ready    <none>   24m   v1.27.3-eks-a5565ad
+ip-10-10-29-68.ec2.internal    Ready    <none>   25m   v1.27.3-eks-a5565ad
+ip-10-10-40-135.ec2.internal   Ready    <none>   24m   v1.27.3-eks-a5565ad
+ip-10-10-40-177.ec2.internal   Ready    <none>   25m   v1.27.3-eks-a5565ad
+ip-10-10-7-29.ec2.internal     Ready    <none>   24m   v1.27.3-eks-a5565ad
 
-kubectl scale --replicas=60 deployment backend
 ```
 
-then run `kubectl get nodes`, and you'll see that more nodes are being created and added to the cluster.
+then running either `kubectl scale --replicas=60 deployment frontend` or `kubectl scale --replicas=60 deployment backend` to trigger cluster scaling
+
+```sh
+$ kubectl scale --replicas=60 deployment frontend
+deployment.apps/frontend scaled
+
+```
+
+and after some minutes, when we run `kubectl get nodes`, you'll see that more nodes are being created and added to the cluster.
+
+```sh
+
+```
+
 The cluster autoscaler type that I used is the auto0discovery type, so it uses the AWS recommended standards, and no values need to be set. It also automatically scales down when the resources used by the pods reduces.
 
 I delpoyed all the ressources in the default namespace for ease of managing the dployed resources, because it is a minimal application, and also because I didn't have enough time to properly configure the logic for namespace to namespace communication. It will get complicated when multiple apps need to be deployed, so this isn't recommended in production. 
@@ -79,6 +101,8 @@ Apart from the security groups created and configured by the EKS module, I imple
 
 ### Monitoring
 
+
+
 ### Issues
 
 The frontend wouldn't communicate with the backend even though I properly configured the deployments and services, however, when I get into the pod and I run `wget backend-service`, I get a response.
@@ -89,7 +113,7 @@ I also get the correct response when I convert the backend-service to a LoadBala
 
 ![IntErr!](./assets/images/interr.png)
 
-And when I use `kubeshark`, I can view the network logs and see that the backend is not even receiving any requests from the frontend.
+And when I use [`kubeshark`](https://kubeshark.co/), I can view the network logs and see that the backend is not even receiving any requests from the frontend.
  
 Getting into a frontend pod and listing the ENV variables gives the result below showing that the `BACKEND_URL` variable is set properly
 
